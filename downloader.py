@@ -33,7 +33,7 @@ def downloader():
                             reinfekce = json.load(response2)['60_dnu']
                         except:
                             print(f"[DATABASE] Tried to update database but still not reinfection data available - {datetime.now()}")
-                            sleep(300)
+                            sleep(600)
                             continue
 
                         cur.execute('INSERT INTO covid_summary ' \
@@ -97,7 +97,7 @@ def downloader():
         except mysql.connector.Error as e:
             print(e)
         
-        sleep(300)
+        sleep(600)
 
 downloader()
 
