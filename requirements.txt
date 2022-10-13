@@ -1,0 +1,6 @@
+aiohttp==3.7.4.post0
+httplib2==0.20.4
+python-dotenv==0.20.0
+requests==2.25.1
+urllib3==1.25.8
+mysql-connector-python==8.0.30
