@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 
 url_summary = 'https://onemocneni-aktualne.mzcr.cz/api/v3/zakladni-prehled?page=1&itemsPerPage=100&apiToken=c54d8c7d54a31d016d8f3c156b98682a'
 url_reinfection = 'https://onemocneni-aktualne.mzcr.cz/api/v3/prehled-reinfekce/XYZ?apiToken=c54d8c7d54a31d016d8f3c156b98682a'
+url_obce = 'https://onemocneni-aktualne.mzcr.cz/api/v3/obce?page=1&itemsPerPage=100&datum%5Bbefore%5D=XYZ&datum%5Bafter%5D=XYZ&apiToken=c54d8c7d54a31d016d8f3c156b98682a'
 
 def downloader():
     req = urllib.request.Request(url_summary)
@@ -17,6 +18,57 @@ def downloader():
         datum_string_yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
         try:
+            # Obce
+            with mysql.connector.connect(host="remotemysql.com", user="9qMwE320zO", password="gmnNuBYtIX", database="9qMwE320zO") as conn:
+                cur = conn.cursor(buffered=True)
+                cur.execute('SELECT * FROM covid_unikatni_okresy WHERE datum = %s LIMIT 1', [datum_string_yesterday])
+                response = cur.fetchone()
+                if response is None:
+                    if datetime.now().hour > 8:
+                        url_1 = url_obce.replace('XYZ', datum_string_yesterday)
+                        req_1 = urllib.request.Request(url_1)
+                        req_1.add_header('accept', 'application/json')
+                        okresy = {}
+                        try:
+                            res = urllib.request.urlopen(req_1)
+                            obce = json.load(res)
+                        except:
+                            print(f"[DATABASE-OBCE] Tried to update database but still no obce data available - {datetime.now()}")
+                            continue
+
+                        for obec in obce:
+                            if obec['okres_lau_kod'] not in okresy:
+                                okresy[obec['okres_lau_kod']] = {}
+                                okresy[obec['okres_lau_kod']]['nove_pripady'] = obec['nove_pripady']
+                                okresy[obec['okres_lau_kod']]['aktivni_pripady'] = obec['aktivni_pripady']
+                                okresy[obec['okres_lau_kod']]['nove_pripady_7'] = obec['nove_pripady_7_dni']
+                                okresy[obec['okres_lau_kod']]['nove_pripady_14'] = obec['nove_pripady_14_dni']
+                                okresy[obec['okres_lau_kod']]['nove_pripady_65_vek'] = obec['nove_pripady_65']
+                            else:
+                                okresy[obec['okres_lau_kod']]['nove_pripady'] += obec['nove_pripady']
+                                okresy[obec['okres_lau_kod']]['aktivni_pripady'] += obec['aktivni_pripady']
+                                okresy[obec['okres_lau_kod']]['nove_pripady_7'] += obec['nove_pripady_7_dni']
+                                okresy[obec['okres_lau_kod']]['nove_pripady_14'] += obec['nove_pripady_14_dni']
+                                okresy[obec['okres_lau_kod']]['nove_pripady_65_vek'] += obec['nove_pripady_65']
+            
+                        for okres in okresy:
+                            cur.execute('INSERT INTO covid_unikatni_okresy (datum, okres, nove_pripady, aktivni_pripady, nove_pripady_7, nove_pripady_14, nove_pripady_65_vek) VALUES (%s, %s, %s, %s, %s, %s, %s)', \
+                                [
+                                    datum_string_yesterday,
+                                    okres,
+                                    okresy[okres]['nove_pripady'],
+                                    okresy[okres]['aktivni_pripady'],
+                                    okresy[okres]['nove_pripady_7'],
+                                    okresy[okres]['nove_pripady_14'],
+                                    okresy[okres]['nove_pripady_65_vek'],
+                                ])
+                            conn.commit()
+                        
+
+                else:
+                    print(f"[DATABASE-OBCE] Up to date - {datetime.now()}")
+
+            # General summary update
             with mysql.connector.connect(host="remotemysql.com", user="9qMwE320zO", password="gmnNuBYtIX", database="9qMwE320zO") as conn:
                 cur = conn.cursor(buffered=True)
                 cur.execute('SELECT * FROM covid_summary WHERE datum = %s', [datum_string_now])
