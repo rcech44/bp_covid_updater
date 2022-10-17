@@ -151,6 +151,7 @@ def downloader():
                     print(f"[DATABASE] Up to date - {datetime.now()}")
         except mysql.connector.Error as e:
             print(e)
+            sleep(600)
         
         sleep(600)
 
