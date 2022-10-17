@@ -63,6 +63,9 @@ def downloader():
                                     okresy[okres]['nove_pripady_65_vek'],
                                 ])
                             conn.commit()
+                    
+                    else:
+                        print(f"[DATABASE-OBCE] Too soon to update, waiting... - {datetime.now()}")
                         
 
                 else:
