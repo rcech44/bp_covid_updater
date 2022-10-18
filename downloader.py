@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 url_summary = 'https://onemocneni-aktualne.mzcr.cz/api/v3/zakladni-prehled?page=1&itemsPerPage=100&apiToken=c54d8c7d54a31d016d8f3c156b98682a'
 url_reinfection = 'https://onemocneni-aktualne.mzcr.cz/api/v3/prehled-reinfekce/XYZ?apiToken=c54d8c7d54a31d016d8f3c156b98682a'
-url_obce = 'https://onemocneni-aktualne.mzcr.cz/api/v3/obce?page=1&itemsPerPage=100&datum%5Bbefore%5D=XYZ&datum%5Bafter%5D=XYZ&apiToken=c54d8c7d54a31d016d8f3c156b98682a'
+url_obce = 'https://onemocneni-aktualne.mzcr.cz/api/v3/obce?page=1&itemsPerPage=10000&datum%5Bbefore%5D=XYZ&datum%5Bafter%5D=XYZ&apiToken=c54d8c7d54a31d016d8f3c156b98682a'
 
 def downloader():
     req = urllib.request.Request(url_summary)
